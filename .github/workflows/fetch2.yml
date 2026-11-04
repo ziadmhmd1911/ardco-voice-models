@@ -47,3 +47,4 @@ jobs:
           cd /mnt/work
           tar -cf - -C model --exclude=.cache . | split -b 1500m -d -a 2 - "$TAG.tar.part"
           gh release create "$TAG" "$TAG".tar.part* -R "$GITHUB_REPOSITORY" --title '${{ matrix.model }}' --notes 'Copy of https://huggingface.co/${{ matrix.model }} (see its licence there)'
+ 
