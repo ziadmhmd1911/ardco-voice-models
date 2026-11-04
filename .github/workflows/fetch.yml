@@ -9,12 +9,9 @@ jobs:
       fail-fast: false
       matrix:
         model:
-          - vadimbelsky/qwen3-TTS-KSA
-          - Qwen/Qwen3-TTS-Tokenizer-12Hz
           - Messam174/Sada-TTS-SA-v1.2
-          - NAMAA-Space/NAMAA-Saudi-TTS
-          - ResembleAI/chatterbox
     env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
       GH_TOKEN: ${{ github.token }}
       HF_HUB_ENABLE_HF_TRANSFER: "1"
       HF_HOME: /mnt/work/hf
