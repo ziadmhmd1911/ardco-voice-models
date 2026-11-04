@@ -1,0 +1,34 @@
+name: Fetch voice models
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model:
+          - vadimbelsky/qwen3-TTS-KSA
+          - Qwen/Qwen3-TTS-Tokenizer-12Hz
+          - Messam174/Sada-TTS-SA-v1.2
+          - NAMAA-Space/NAMAA-Saudi-TTS
+          - ResembleAI/chatterbox
+    env:
+      GH_TOKEN: ${{ github.token }}
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      HF_HOME: /mnt/work/hf
+    steps:
+      - name: Prepare disk
+        run: sudo mkdir -p /mnt/work && sudo chown "$USER" /mnt/work
+      - name: Download from Hugging Face
+        run: |
+          pip install -q -U huggingface_hub hf_transfer
+          python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='${{ matrix.model }}', local_dir='/mnt/work/model')"
+          du -sh /mnt/work/model
+      - name: Publish as a release
+        run: |
+          TAG=$(echo '${{ matrix.model }}' | sed 's#/#__#')
+          cd /mnt/work
+          tar -cf - -C model --exclude=.cache . | split -b 1500m -d -a 2 - "$TAG.tar.part"
+          gh release create "$TAG" "$TAG".tar.part* -R "$GITHUB_REPOSITORY" --title '${{ matrix.model }}' --notes 'Copy of https://huggingface.co/${{ matrix.model }} (see its licence there)'
