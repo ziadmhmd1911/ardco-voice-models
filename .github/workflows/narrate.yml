@@ -1,0 +1,391 @@
+name: Narrate the video
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - run: gh release delete narration -y --cleanup-tag -R "$GITHUB_REPOSITORY" || true
+      - run: gh release create narration -R "$GITHUB_REPOSITORY" --title "Narration" --notes "Saudi voice-over lines"
+  voice:
+    needs: release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          pip install -q torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q chatterbox-tts==0.1.7 "setuptools<81" sherpa-onnx soundfile
+          curl -sSL -o w.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-turbo.tar.bz2
+          tar -xjf w.tar.bz2 && rm w.tar.bz2
+      - name: Write script
+        run: |
+          cat > script.json <<'JSON'
+          [
+          [
+          "s00",
+          "n01",
+          "أهلاً وسهلاً فيكم."
+          ],
+          [
+          "s00",
+          "n02",
+          "هذا نظام أَرْشَفة المستندات، في شركة الرِّياض للتعمير."
+          ],
+          [
+          "s00",
+          "n03",
+          "أرشيف موحّد، وآمن، وذكي."
+          ],
+          [
+          "s01",
+          "n04",
+          "قبل النظام، كانت المستندات موزّعة بين الإيميلات، والأجهزة، والمجلدات المُشْتَرَكة."
+          ],
+          [
+          "s01",
+          "n05",
+          "وتواريخ الانتهاء والتَّجْدِيد، صعب أحد يتابعها."
+          ],
+          [
+          "s01",
+          "n06",
+          "والبحث عن مستند واحد، ممكن ياخذ وقت طويل."
+          ],
+          [
+          "s01",
+          "n07",
+          "والحل: أرشيف واحد، ببيانات إلزامية، ومتابعة لِلتَّجْدِيدات، ومساعد ذكي."
+          ],
+          [
+          "s02",
+          "n08",
+          "خلّونا الحين نشوف النظام على الطبيعة."
+          ],
+          [
+          "s03",
+          "n09",
+          "كل إدارات الشركة في أرشيف واحد، بهيكل موحّد ومعتمد."
+          ],
+          [
+          "s03",
+          "n10",
+          "تتنقّل بالبطاقات، أو من الشجرة، والاثنين يمشون مع بعض."
+          ],
+          [
+          "s03",
+          "n11",
+          "ندخل المشتريات، ثم إدارة الموردين، ثم تأهيل الموردين."
+          ],
+          [
+          "s04",
+          "n12",
+          "كل مستند معه بياناته: تاريخه، وتاريخ انتهائه، والطرف المقابل، ورقمه المرجعي."
+          ],
+          [
+          "s04",
+          "n13",
+          "وحالته واضحة من أول نظرة: ساري لمدة أربعة شهور، بدون ما تحسب التواريخ."
+          ],
+          [
+          "s04",
+          "n14",
+          "ولو تبي التفاصيل كاملة، تلقاها كلها في مكان واحد."
+          ],
+          [
+          "s05",
+          "n15",
+          "وتقدر ترتّب المستندات حسب أي حقل، مثلاً الأقرب انتهاءً."
+          ],
+          [
+          "s05",
+          "n16",
+          "فيطلع لك المنتهي أول، وبعده اللي قرّب موعده."
+          ],
+          [
+          "s06",
+          "n17",
+          "والبيانات تختلف حسب طبيعة كل مجلد."
+          ],
+          [
+          "s06",
+          "n18",
+          "في المشاريع، تشوف نوع المستند، ومرحلة المشروع."
+          ],
+          [
+          "s06",
+          "n19",
+          "وفي القضايا، تشوف رقم القضية، وحالتها."
+          ],
+          [
+          "s07",
+          "n20",
+          "والبحث من أقوى مزايا النظام."
+          ],
+          [
+          "s07",
+          "n21",
+          "تقدر تفلتر بأي حقل، مثلاً القضايا اللي في مرحلة الجَلَسات."
+          ],
+          [
+          "s07",
+          "n22",
+          "أو تبحث في الأرشيف كامل برقم مرجعي، ويطلع لك المستند وين ما كان."
+          ],
+          [
+          "s07",
+          "n23",
+          "أو باسم أي جِهة، وتشوف كل مستنداتها في كل الإدارات."
+          ],
+          [
+          "s07",
+          "n24",
+          "أو بأي كلمة من اسم المستند، وتفتحه مباشرة."
+          ],
+          [
+          "s08",
+          "n25",
+          "ويفتح لك المستند بعرض آمن، وعليه علامة مائية فيها اسمك، ووقت العرض."
+          ],
+          [
+          "s08",
+          "n26",
+          "وتنزيل النسخة الأصلية بدون علامة، متاح بس لأصحاب الصلاحية."
+          ],
+          [
+          "s09",
+          "n27",
+          "وكذلك الحذف، محصور على أدوار معيّنة."
+          ],
+          [
+          "s09",
+          "n28",
+          "ويطلب تأكيد قبل أي حذف، عشان ما يصير شي بالغلط."
+          ],
+          [
+          "s10",
+          "n29",
+          "خلّونا نقارن بين مدير النظام، وموظف في إدارة المشتريات."
+          ],
+          [
+          "s10",
+          "n30",
+          "الموظف يشوف إدارته بس."
+          ],
+          [
+          "s10",
+          "n31",
+          "وما يظهر له زر الحذف."
+          ],
+          [
+          "s10",
+          "n32",
+          "ولا زر تنزيل النسخة الأصلية."
+          ],
+          [
+          "s11",
+          "n33",
+          "وعند إضافة مستند جَدِيد، النَّمُوذَج يطلب البيانات الإلزامية."
+          ],
+          [
+          "s11",
+          "n34",
+          "وما ينحفظ أي مستند ناقص، عشان تبقى البيانات موثوقة."
+          ],
+          [
+          "s11",
+          "n35",
+          "والنَّمُوذَج نفسه يتغيّر حسب المجلد، مثل نَمُوذَج القضايا."
+          ],
+          [
+          "s12",
+          "n36",
+          "وفي لوحة المتابعة، تشوف الصورة كاملة."
+          ],
+          [
+          "s12",
+          "n37",
+          "التَّجْدِيدات: وش انتهى، ووش بينتهي، قبل لا يفوت الموعد."
+          ],
+          [
+          "s12",
+          "n38",
+          "بضغطة، تطلع لك المستندات اللي تنتهي خلال ثلاثين يوم، ومع كل مستند مكانه."
+          ],
+          [
+          "s12",
+          "n39",
+          "وقيمة العقود اللي تستحق التَّجْدِيد خلال تسعين يوم: أكثر من سبعة عشر مليون ريال."
+          ],
+          [
+          "s12",
+          "n40",
+          "وتقويم السنة، يوضّح لك مواسم التَّجْدِيد قبل لا توصل."
+          ],
+          [
+          "s13",
+          "n41",
+          "وتشوف وين وصل الشغل: القضايا، والمنافسات، والمشاريع، كل مرحلة بلونها."
+          ],
+          [
+          "s13",
+          "n42",
+          "وتقدر تضغط على أي جِهة، وتطلع لك كل مستنداتها."
+          ],
+          [
+          "s14",
+          "n43",
+          "وتحت، أحدث المستندات، والأكثر فتح، ومفضّلتك."
+          ],
+          [
+          "s14",
+          "n44",
+          "وتوزيع المستندات على الإدارات."
+          ],
+          [
+          "s14",
+          "n45",
+          "ومين أكثر الموظفين إضافة للمستندات هالشهر."
+          ],
+          [
+          "s14",
+          "n46",
+          "وجَوْدة البيانات: نسبة المستندات المكتملة، ووين النواقص بالضبط."
+          ],
+          [
+          "s15",
+          "n47",
+          "وموظف المشتريات، يشوف في لوحته بيانات إدارته بس."
+          ],
+          [
+          "s15",
+          "n48",
+          "وأدوات الإشراف، مثل جَوْدة البيانات، تظهر لمدير النظام فقط."
+          ],
+          [
+          "s16",
+          "n49",
+          "وأخيراً، المساعد الذكي."
+          ],
+          [
+          "s16",
+          "n50",
+          "تسأله بالعربي، ويجاوبك من المستندات نفسها، ويذكر لك المصدر."
+          ],
+          [
+          "s16",
+          "n51",
+          "ويطلّع لك تفاصيل العقود، وقيمها، من داخل المستند."
+          ],
+          [
+          "s16",
+          "n52",
+          "ويلخّص لك المحاضر في ثواني."
+          ],
+          [
+          "s17",
+          "n53",
+          "نظام أَرْشَفة المستندات: أرشيف موحّد، وبيانات موثوقة، وتَجْدِيدات تحت السيطرة، وبحث ذكي."
+          ],
+          [
+          "s17",
+          "n54",
+          "أرشيف واحد، لكل إدارات الشركة."
+          ]
+          ]
+          JSON
+          cat > gen.py <<'PY'
+
+          import os, sys, json, re, difflib, time, torch, numpy as np, librosa, soundfile as sf, sherpa_onnx
+          from safetensors.torch import load_file
+          from huggingface_hub import hf_hub_download
+          from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+          torch.set_num_threads(os.cpu_count())
+          SHARD, SHARDS = int(sys.argv[1]), int(sys.argv[2])
+          lines = json.load(open('script.json'))
+          mine = [l for i, l in enumerate(lines) if i % SHARDS == SHARD]
+
+          D = 'sherpa-onnx-whisper-turbo/'
+          asr = sherpa_onnx.OfflineRecognizer.from_whisper(encoder=D+'turbo-encoder.int8.onnx', decoder=D+'turbo-decoder.int8.onnx',
+                  tokens=D+'turbo-tokens.txt', language='ar', task='transcribe', num_threads=os.cpu_count())
+          def norm(s):
+              s = re.sub(r'[ً-ْٰـ]', '', s)
+              s = re.sub('[إأآا]', 'ا', s).replace('ة', 'ه').replace('ى', 'ي')
+              s = re.sub(r'[^ء-ي0-9A-Za-z ]', ' ', s)
+              return ' '.join(s.split())
+          def n2(s): return re.sub('[قجكغ]', 'Q', norm(s))
+          MUST = ['الرياض', 'تعمير', 'ارشيف', 'ارشفه', 'تجديد']
+          DIALECT = set(n2(w) for w in 'الحين خلونا ياخذ وش بس تبي تلقاها اللي هالشهر يطلع وش بينتهي يمشون الاثنين ويطلع'.split())
+          def hear(y, sr):
+              y = librosa.resample(y, orig_sr=sr, target_sr=16000)
+              y = np.concatenate([np.zeros(4800), y, np.zeros(16000)]).astype(np.float32)
+              st = asr.create_stream(); st.accept_waveform(16000, y); asr.decode_stream(st)
+              return st.result.text
+          def judge(target, heard):
+              a, b = n2(target).split(), n2(heard).split()
+              r = difflib.SequenceMatcher(None, ' '.join(a), ' '.join(b)).ratio()
+              tail = difflib.SequenceMatcher(None, ' '.join(a[-2:]), ' '.join(b[-2:])).ratio() if a and b else 0
+              head = difflib.SequenceMatcher(None, ' '.join(a[:2]), ' '.join(b[:2])).ratio() if a and b else 0
+              worst = 1.0
+              for w in a:
+                  if len(w) < 3: continue
+                  best = max([difflib.SequenceMatcher(None, w, x).ratio() for x in b] or [0])
+                  if w in DIALECT: best = min(1.0, best + .2)
+                  worst = min(worst, best)
+              names = all(m in norm(heard) for m in MUST if m in norm(target))
+              return r, head, tail, worst, names
+
+          m = ChatterboxMultilingualTTS.from_pretrained(device='cpu')
+          ckpt = hf_hub_download('Messam174/Sada-TTS-SA-v1.2', 'model.safetensors')
+          res = m.t3.load_state_dict(load_file(ckpt), strict=False); print('sada weights', res, flush=True); assert not res.missing_keys; m.t3.eval()
+          ref = hf_hub_download('Messam174/Sada-TTS-SA-v1.2', 'assets/audio/sample_akhuk.wav')
+          m.prepare_conditionals(ref, exaggeration=0.3)
+          os.makedirs('out', exist_ok=True)
+          report = {}
+          for scene, lid, text in mine:
+              t0 = time.time(); cands = []
+              for k in range(8):
+                  torch.manual_seed(4242 + 97 * k + len(text))
+                  temp = [0.45, 0.45, 0.5, 0.4, 0.45, 0.55, 0.4, 0.5][k]
+                  with torch.inference_mode():
+                      w = m.generate(text, language_id='ar', exaggeration=0.3, cfg_weight=0.35, temperature=temp,
+                                     repetition_penalty=2.5, min_p=0.05, top_p=0.9)
+                  y = w.squeeze().numpy()
+                  _, idx = librosa.effects.trim(y, top_db=42, frame_length=1024, hop_length=256)
+                  y = y[max(0, idx[0] - int(.07 * m.sr)):min(len(y), idx[1] + int(.09 * m.sr))]
+                  heard = hear(y, m.sr)
+                  r, head, tail, worst, names = judge(text, heard)
+                  dur = len(y) / m.sr
+                  rate = len(norm(text).replace(' ', '')) / max(dur, .1)
+                  ok_rate = 6.0 <= rate <= 15.5
+                  score = r + .5 * tail + .3 * head + .8 * worst + (0 if names else -1) - (0 if ok_rate else .5)
+                  cands.append(dict(score=score, y=y, r=r, head=head, tail=tail, worst=worst, names=names, heard=heard, dur=dur, rate=rate, k=k))
+                  good = [c for c in cands if c['r'] >= .9 and c['worst'] >= .86 and c['names'] and c['head'] >= .7 and c['tail'] >= .7]
+                  if len(cands) >= 3 and good: break
+              cands.sort(key=lambda c: -c['score'])
+              for rank, c in enumerate(cands[:2]):
+                  pad = np.zeros(int(.04 * m.sr), dtype=np.float32)
+                  sf.write(f'out/{lid}{"" if rank == 0 else "_b"}.wav', np.concatenate([pad, c['y'], pad]), m.sr)
+              b = cands[0]
+              report[lid] = {k: (round(v, 3) if isinstance(v, float) else v) for k, v in b.items() if k not in ('y', 'score')}
+              report[lid].update(text=text, scene=scene, tries=len(cands))
+              print(lid, json.dumps(report[lid], ensure_ascii=False), f'{time.time()-t0:.0f}s', flush=True)
+          json.dump(report, open(f'out/shard-{SHARD}.json', 'w'), ensure_ascii=False, indent=1)
+
+          PY
+      - name: Speak
+        run: python gen.py ${{ matrix.shard }} 18
+      - name: Publish
+        run: gh release upload narration out/* -R "$GITHUB_REPOSITORY" --clobber
